@@ -1,0 +1,1458 @@
+ Development Instructions
+
+Key Points : 
+Use Webclient for Rest Call.
+
+
+
+vxp-bpm-customer-integration
+
+Description - Implementation of Get Account/Customer Profile By ESN
+
+
+REQUEST
+
+GET -/v1/api/custmgmt/customer/profile/{case_id}
+
+RESPONSE
+   
+   {"status":{"code":"0","message":"Success","type":"SUCCESS"}}
+
+
+
+
+
+Create a GET - /customer/profile/{case_id}
+Call TransactionalDataUtils.getTransactionData(case_id) 
+ From the JSON coming from step 2 filter ESN value
+ Form Request payload as per GetCustomer tab and call the getCustomerById GraphQL
+
+GET PROFILE BY TYPE
+https://vxpvagg-k18v-nsdit1-proxy.ebiz.verizon.com/customerprofile-services/graphql
+
+REQUEST:
+
+query CustomerByType {
+    customerByType(
+        customerTypeRequest: {
+            type: "HANDSET"
+            identifier: "100000014078447"
+            sourceSystem: "AURA-CARE"
+            brand: "STRAIGHT_TALK"
+        }
+    ) {
+        id
+    }
+}
+
+
+Response:
+
+ {
+      "id": "2433195016"
+    }
+
+If Response is No data found then reply back to the JBPM with No Data Found Error Message.
+If in Response customer id is coming back store that in the hashmap by calling TransactionalDataUtils.addTransactionData(refnumber, Field Name, Field Value) and reply back to JBPM as Success
+
+—------------------------------------------------------------------------------------------------------------------
+—------------------------------------------------------------------------------------------------------------------
+
+vxp-bpm-brm-integration 
+
+
+Description - Implementation of Get BAN
+
+
+
+REQUEST
+
+GET - /v1/api/brmmgmt/ban/{case_id}
+
+RESPONSE
+   
+   {"status":{"code":"0","message":"Success","type":"SUCCESS"}}
+
+
+
+Create a GET -  /ban/{case_id}
+Call TransactionalDataUtils.getTransactionData(case_id) 
+ From the JSON coming from step 2 filter aac_source (web objid) value.
+ Form Request payload as per GetBan tab and call the BRM Get Ban Adapter
+
+
+'https://vxp-k0cv-nsdit1.ebiz.verizon.com/brmadapter/account/enquiries/getban' \
+--header 'Content-Type: application/json' \
+--header 'Accept: application/json' \
+--header 'X-Brand: TOTAL_WIRELESS' \
+--header 'X-SourceSystem: WEB' \
+--data '{
+    "poid": "0.0.0.1 /account -1 0"
+    "aac_source": "7066988887500"
+}'
+
+Response Body :-
+
+{
+    "data": {
+        "account_no": "0650012096",
+        "aac_source": "70898926161890064",
+        "bill_no": "B1-247922",
+        "error_num": 0,
+        "provisioning_info": [
+            {
+                "days": 30,
+                "login": "507799999208989601"
+            }
+        ],
+        "services": [
+            {
+                "group_name": "TGROUP_ID:47085",
+                "logins": [
+                    {
+                        "login": "507799999208989601"
+                    }
+                ],
+                "pause_renewal_flag": 0
+            }
+        ],
+        "poid": "0.0.0.1 /account 9109436 0",
+        "due": 65.0,
+        "tax": 5.09,
+        "amount": 59.91
+    }
+}
+
+
+
+If Response is No data found then reply back to the JBPM with No Data Found Error Message.
+If in Response BAN is coming back store that in the hashmap by calling TransactionalDataUtils.addTransactionData(refnumber, Field Name, Field Value) and reply back to JBPM as Success
+
+—------------------------------------------------------------------------------------------------------------------
+—------------------------------------------------------------------------------------------------------------------
+
+Description - Implementation of Get Account Balance
+
+
+
+REQUEST
+
+GET - /v1/api/brmmgmt/accountbalance/{case_id}
+
+RESPONSE
+   
+   {
+    ""data"": {
+        ""account_no"": ""0650011663"",
+        ""amount"": 0.0,
+        ""error_descr"": ""Success"",
+        ""error_num"": 0,
+        ""poid"": ""0.0.0.1 /account -1 0""
+    }
+}
+
+
+
+Create a GET -  /accountbalance/{case_id}
+Call TransactionalDataUtils.getTransactionData(case_id) 
+ From the JSON coming from step 2 filter aac_source (web objid) value.
+ Form Request payload as per GetAccountBalance tab and call the BRM Get CashBalance Adapter
+
+Get Cash Balance	
+
+curl --location 'https://vxp-k0cv-nsdit1.ebiz.verizon.com/brmadapter/enquiries/getcashbalance' \
+--header 'Content-Type: application/json' \
+--header 'Accept: application/json' \
+--header 'X-Brand: TOTAL_WIRELESS' \
+--header 'X-SourceSystem: WEB' \
+
+"{
+    ""poid"" : ""0.0.0.1 /account -1 0",
+    ""aac_source"" : ""70898966168899""
+}"	
+
+
+Response Body :- 
+
+"{
+    ""data"": {
+        ""account_no"": ""0650011663"",
+        ""amount"": 0.0,
+        ""error_descr"": ""Success"",
+        ""error_num"": 0,
+        ""poid"": ""0.0.0.1 /account -1 0""
+    }
+}"
+
+
+
+If Response is No data found then reply back to the JBPM with No Data Found Error Message.
+If in Response amount is coming back store that in the hashmap by calling TransactionalDataUtils.addTransactionData(refnumber, Field Name, Field Value) and reply back to JBPM as Success
+
+—------------------------------------------------------------------------------------------------------------------
+—------------------------------------------------------------------------------------------------------------------
+
+Description - Implementation of CreateBAN
+
+
+
+REQUEST
+
+POST - /v1/api/brmmgmt/ban/{case_id}
+
+RESPONSE
+   
+   {"status":{"code":"0","message":"Success","type":"SUCCESS"}}
+
+
+
+Create a POST-  /ban/{case_id}
+Call TransactionalDataUtils.getTransactionData(case_id) 
+ From the JSON coming from step 2 filter aac_source (web objid) value.
+ Form Request payload as per CreateBan tab and call the BRM Create Ban Adapter
+
+Create Billing API:
+
+Request Body :- 
+curl --location 'https://vxpvads-k1bv-nsdit1.ebiz.verizon.com/brmadapter/account/ban/create' \
+--header 'Content-Type: application/json' \
+--header 'Accept: application/json' \
+--header 'X-Brand: TOTAL_WIRELESS' \
+--header 'X-SourceSystem: WEB' \
+--data '{
+    "poid": "0.0.0.1 /account -1 0",
+    "order_id": "2d32393737323130353337",
+    "groups": [
+        {
+            "deals": [
+                {
+                    "login": "50779999900898912",
+                    "pin": "998298987878998989125",
+                    "deal_name": "TOU0065"
+                }
+           ]
+        }
+    ],
+    "nameinfo": [
+        {
+            "country": "US",
+            "zip": "33178",
+            "type": 2
+        }
+    ],
+    "aac_source": "7089896616889099",
+    "source": "APP"
+}'
+
+Response Body :-  
+
+response 200 Ok
+
+{
+    "data": {
+        "account_no": "0650012096",
+        "aac_source": "70898926161890064",
+        "bill_no": "B1-247922",
+        "error_num": 0,
+        "provisioning_info": [
+            {
+                "days": 30,
+                "login": "507799999208989601"
+            }
+        ],
+        "services": [
+            {
+                "group_name": "TGROUP_ID:47085",
+                "logins": [
+                    {
+                        "login": "507799999208989601"
+                    }
+                ],
+                "pause_renewal_flag": 0
+            }
+        ],
+        "poid": "0.0.0.1 /account 9109436 0",
+        "due": 65.0,
+        "tax": 5.09,
+        "amount": 59.91
+    }
+}
+
+
+
+
+
+If Response is No data found then reply back to the JBPM with No Data Found Error Message.
+If in Response BAN is coming back store that in the hashmap by calling TransactionalDataUtils.addTransactionData(refnumber, Field Name, Field Value) and reply back to JBPM as Success
+
+—------------------------------------------------------------------------------------------------------------------
+—------------------------------------------------------------------------------------------------------------------
+vxp-bpm-productinventory-integration 
+
+
+Description - Implementation of Burn PIN
+
+
+REQUEST
+
+DELETE - /productinventory/reserve-cash-balance-pin/{case_id}
+
+RESPONSE
+   
+   {"status":{"code":"0","message":"Success","type":"SUCCESS"}}
+
+
+
+Create a DELETE - /productinventory/reserve-cash-balance-pin/{case_id}
+Call TransactionalDataUtils.getTransactionData(case_id) 
+ From the JSON coming from step 2 filter voucher_number (cash pin) value.
+ Form Request payload to Call BAU .- comment(For now call BAU untill the Product Inventory NSA /cash-balance-pin-domain/reserve-cash-balance-pin is ready)
+
+DELETE https://sitdue128.awslowermesh.tracfone.com/api/product-inventory-mgmt/product/payment-card/999999954614782?sourceSystem=WEB
+
+Response:
+
+{"status":{"code":"0","message":"Success","type":"SUCCESS"}}
+
+If Response is No data found then reply back to the JBPM with No Data Found Error Message.
+If in Response Success is returned then reply back to JBPM as Success.
+
+—------------------------------------------------------------------------------------------------------------------
+—------------------------------------------------------------------------------------------------------------------
+
+vxp-bpm-resource-integration 
+
+
+Description - Implementation of Get and Validate PIN
+
+
+REQUEST
+
+GET - /resource-mgmt/get-cash-balance-pin/{case_id}
+
+RESPONSE
+   
+   {"status":{"code":"0","message":"Success","type":"SUCCESS"}}
+
+
+
+Create a GET - /resource-mgmt/get-cash-balance-pin/{case_id}
+Call TransactionalDataUtils.getTransactionData(case_id) 
+ From the JSON coming from step 2 filter voucher_number(cash balance PIN) value.
+ Form Request payload to Call BAU 
+GET			/api/product-inventory-mgmt/product/airtime/999999955346218?brand=TOTAL_WIRELESS&type=ANY&sourceSystem=WEB
+
+
+Response:
+
+{
+			  "status": {
+				"code": "0",
+				"message": "SUCCESS"
+			  },
+			  "product": {
+				"relatedServices": [
+				  {
+					"category": "PAYMENT_CARD",
+					"specifications": {
+					  "partClass": "TO40PCARD",
+					  "partNumber": "TORTR0040PCARD"
+					},
+					"characteristics": [
+					  {
+						"name": "priceValue",
+						"value": "40"
+					  },
+					  {
+						"name": "statusCode",
+						"value": "42"
+					  }
+					],
+					"representedBy": [
+					  {
+						"resourceCategory": "PAYMENT_CARD",
+						"serialNumber": "***********6218"
+					  }
+					]
+				  }
+				]
+			  }
+			}
+
+
+
+If Response is No data found then reply back to the JBPM with No Data Found Error Message.
+If in Response priceValue is coming back store that in the hashmap by calling TransactionalDataUtils.addTransactionData(refnumber, Field Name, Field Value) and reply back to JBPM as Success
+
+—------------------------------------------------------------------------------------------------------------------
+—------------------------------------------------------------------------------------------------------------------
+
+vxp-bpm-payment-integration 
+
+
+Description - Implementation of Get Payment Method
+
+
+REQUEST
+
+GET - /payment-method/{payment Method id}
+
+RESPONSE
+   
+   {"status":{"code":"0","message":"Success","type":"SUCCESS"}}
+
+
+
+Create a GET - /payment-method/{payment Method id}
+Call TransactionalDataUtils.getTransactionData(case_id) 
+ From the Request Get the payment Method id.
+ Form Request payload Call VXP Payment Aggregator.
+GET			https://vxpvagg-k18v-nsdit1.ebiz.verizon.com/payment-services/payment-mgmt/payment-method/{paymentMethodId} 
+
+
+Response:
+
+{
+    "data": {
+        "status": {
+            "code": "0",
+            "message": "Transaction performed successfully",
+            "type": "SUCCESS"
+        },
+        "webUserId": "739100011",
+        "paymentMethod": {
+            "creditCard": {
+                "type": "VISA",
+                "cardNumber": null,
+                "month": 12,
+                "year": 2030,
+                "tokenizedCreditCard": {
+                    "name": null,
+                    "description": null,
+                    "isPreferred": null,
+                    "authorizationCode": null,
+                    "status": null,
+                    "statusDate": null,
+                    "statusReason": null,
+                    "validFor": null,
+                    "relatedParty": null,
+                    "relatedPlace": null,
+                    "account": null,
+                    "id": null,
+                    "href": null,
+                    "@baseType": null,
+                    "@schemaLocation": null,
+                    "@type": null,
+                    "token": "7020000000008094113",
+                    "tokens": null,
+                    "brand": null,
+                    "cardType": "VISA",
+                    "lastFourDigits": "2156",
+                    "tokenType": "CYBS-TOKEN",
+                    "expiryMonth": null,
+                    "expiryYear": null,
+                    "encryptedCVV": null,
+                    "issuer": "CyberSource",
+                    "cardBin": null,
+                    "state": null,
+                    "expirationDate": null
+                },
+                "vztokenizedCreditCard": {
+                    "name": null,
+                    "description": null,
+                    "isPreferred": null,
+                    "authorizationCode": null,
+                    "status": null,
+                    "statusDate": null,
+                    "statusReason": null,
+                    "validFor": null,
+                    "relatedParty": null,
+                    "relatedPlace": null,
+                    "account": null,
+                    "id": null,
+                    "href": null,
+                    "@baseType": null,
+                    "@schemaLocation": null,
+                    "@type": null,
+                    "token": "411234YAJOCE4113",
+                    "tokens": null,
+                    "brand": null,
+                    "cardType": "VISA",
+                    "lastFourDigits": "2156",
+                    "tokenType": "VZ-TOKEN",
+                    "expiryMonth": null,
+                    "expiryYear": null,
+                    "encryptedCVV": null,
+                    "issuer": "VERIZON",
+                    "cardBin": null,
+                    "state": null,
+                    "expirationDate": null
+                }
+            },
+            "paymentMethodId": "200000556",
+            "name": null,
+            "token": null,
+            "firstName": "Ki woong",
+            "lastName": "ROH",
+            "accountHolderName": null,
+            "email": "Royroh7014@gmail.com",
+            "phoneNumber": "(213) 675 8515",
+            "nickName": null,
+            "isDefault": null,
+            "billingAddressId": null,
+            "billingAddress": null,
+            "createdTmstamp": null,
+            "@type": "CreditCard",
+            "digitalWallet": null,
+            "initialAuthCode": null,
+            "autoRefillEligibility": false
+        }
+    }
+}
+
+
+
+
+If Response is No data found then reply back to the JBPM with No Data Found Error Message.
+If it is success from Response store the below values in the hashmap by calling TransactionalDataUtils.addTransactionData(refnumber, Field Name, Field Value) and reply back to JBPM as Success.
+paymentMethod.tokens.name
+paymentMethod.tokens.relatedParty.firstName
+paymentMethod.tokens.relatedParty.lastName
+paymentMethod.tokens.relatedParty.email
+paymentMethod.tokens.billingAddress.addressLine1
+paymentMethod.tokens.billingAddress.city
+paymentMethod.tokens.billingAddress.stateOrProvince
+paymentMethod.tokens.billingAddress.country
+paymentMethod.tokens.billingAddress.zipcode
+cardExpiryMonth
+cardExpiryYear
+
+—------------------------------------------------------------------------------------------------------------------
+—------------------------------------------------------------------------------------------------------------------
+
+vxp-bpm-browsing-integration 
+
+
+Description - Implementation of Get And Validate Part
+
+
+REQUEST
+
+GET - /product-offerings/{case_id}
+
+RESPONSE
+   
+   {"status":{"code":"0","message":"Success","type":"SUCCESS"}}
+
+
+
+Create a GET - /product-offerings/{case_id}
+Call TransactionalDataUtils.getTransactionData(case_id) 
+ From the JSON coming from step 2 filter partNumber.
+ Form Request payload Call NSA VXP Browsing Service 
+GET			
+/api/catalog-mgmt/offer/TORTR0065PCARD
+
+
+Response:
+
+{
+  "category": "PAYMENT_CARD",
+  "offeringTerms": [
+    {
+      "offeringPrice": [
+        {
+          "priceType": "cashValue",
+          "price": {
+            "amount": 65.00
+          }
+        }
+      ]
+    }
+  ],
+}
+
+
+
+If Response is No data found then reply back to the JBPM with No Data Found Error Message.
+If in Response amount is coming back store that in the hashmap by calling TransactionalDataUtils.addTransactionData(refnumber, Field Name, Field Value) and reply back to JBPM as Success
+
+—------------------------------------------------------------------------------------------------------------------
+—------------------------------------------------------------------------------------------------------------------
+vxp-bpm-shopping-integration 
+
+
+Description - Implementation of Estimate Order-Renewal Quote
+
+
+REQUEST
+
+POST - /estimate-order/{case_id}
+
+RESPONSE
+   
+   {"status":{"code":"0","message":"Success","type":"SUCCESS"}}
+
+
+
+Create a GET - /estimate-order/{case_id}
+Call TransactionalDataUtils.getTransactionData(case_id) 
+From the JSON coming from step 1 filter The Request fields needed for /estimate-order Payload of BRM Adapter
+Form Request payload Call NSA VXP Shopping Service Estimate Order Endpoint 
+POST			
+
+
+Request:
+Need to provide
+Response :-
+
+
+
+
+If Response is No data found then reply back to the JBPM with No Data Found Error Message.
+If in Response TotalAmount is coming back store that in the hashmap by calling TransactionalDataUtils.addTransactionData(refnumber, Field Name, Field Value) and reply back to JBPM as Success
+
+—------------------------------------------------------------------------------------------------------------------
+—------------------------------------------------------------------------------------------------------------------
+vxp-bpm-brm-integration 
+
+
+Description - Implementation of Purchase Airtime
+
+REQUEST
+
+GET - /v1/api/brmmgmt/purchaseAirtime/{case_id}
+
+RESPONSE
+   
+   {"status":{"code":"0","message":"Success","type":"SUCCESS"}}
+
+
+
+Create a GET - /purchaseAirtime/{case_id}
+Call TransactionalDataUtils.getTransactionData(case_id) 
+ From the JSON coming from step 1 filter The Request fields needed for Purchase Airtime Payload of BRM Adapter.
+ Form Request payload Call NSA VXP Purchase Airtime  BRM Adapter
+Redemption Card Purchase	
+
+curl --location 'https://vxp-k0cv-nsdit1.ebiz.verizon.com/brmadapter/payment/redemptioncard/purchase' \
+--header 'X-Brand: TOTAL_WIRELESS' \
+--header 'X-SourceSystem: WEB' \
+--header 'Content-Type: application/json' \
+--header 'Accept: application/json' \
+
+
+"{
+    ""account_no"": ""0650011587"",an
+    ""zip"": ""33178"",
+    ""geocode"": ""USA12086179350"",
+    ""country"": ""US"",
+    ""flags"": ""0"",
+    ""order_id"": ""1733086490"",
+    ""action"": ""RDMBAN"",
+    ""source"": ""WEB"",
+    ""deals"": [
+        {
+            ""deal_name"": ""TOU0065"",
+            ""login"": ""50779999900898962"",
+            ""pin"": ""998298922_u"",
+            ""trans_op_queued"": ""0"",
+            ""service_id"": ""TGROUP_ID:45359"",
+            ""status_flags"": 0
+        }
+    ],
+    ""poid"": ""0.0.0.1 /account -1 0""
+}	
+
+Response body :- 
+
+"{
+    ""data"": {
+        ""account_no"": ""0650012101"",
+        ""amount"": 59.91,
+        ""error_num"": 0,
+        ""results"": [
+            {
+                ""end_t"": ""2025-05-09T04:00:00Z"",
+                ""group_name"": ""TGROUP_ID:47095"",
+                ""login"": ""507799999208989602"",
+                ""service_info"": [
+                    {
+                        ""provisioning_info"": [
+                            {
+                                ""days"": 30,
+                                ""login"": ""507799999208989602""
+                            }
+                        ]
+                    }
+                ],
+                ""start_t"": ""2025-04-09T04:00:00Z""
+            }
+        ],
+        ""bill_no"": ""B1-247950"",
+        ""poid"": ""0.0.0.1 /account -1 0""
+    }
+}"
+
+
+
+
+If Response is No data found then reply back to the JBPM with No Data Found Error Message.
+If in Response amount is coming back store that in the hashmap by calling TransactionalDataUtils.addTransactionData(refnumber, Field Name, Field Value) and reply back to JBPM as Success
+
+—------------------------------------------------------------------------------------------------------------------
+—------------------------------------------------------------------------------------------------------------------
+
+
+vxp-bpm-order-integration 
+
+
+Description - Implementation of Submit Product Order
+
+
+REQUEST
+
+POST- /submit-order{case_id}
+
+
+RESPONSE
+   
+   {"status":{"code":"0","message":"Success","type":"SUCCESS"}}
+
+
+
+Create a GET - /product-offerings/{case_id}
+Call TransactionalDataUtils.getTransactionData(case_id) 
+ From the JSON coming from step 1 filter The Request fields needed for Submit Payload for BAU Product Order Submit Order
+ Form Request payload Call Submit Payload for BAU Product Order Submit Order
+https://test-webapigateway.tracfone.com/api/pub/order-mgmt/submit-order?client_id=b00e7251-bcb6-4ee9-9747-42a813e231ad&language=ENG
+
+
+Request:
+{
+    "relatedParties": [
+        {
+            "party": {
+                "partyID": "TWWEB",
+                "languageAbility": "ENG"
+            },
+            "roleType": "partner"
+        }
+    ],
+    "id": "1635-4O6I655TE6",
+    "comments": ""
+}
+
+Response:
+{
+    "status": {
+        "code": "0",
+        "message": "Success"
+    },
+    "orders": [
+        {
+            "id": "1635-4O6I655TE6",
+            "orderDate": "2025-06-02T16:40:20.082Z",
+            "status": "M",
+            "type": "FRP",
+            "comments": "",
+            "externalID": "Tracking number not available",
+            "description": "Pending payment approval",
+            "trackingProvider": "UPS 2-Day",
+            "orderItems": [
+                {
+                    "id": "844760671",
+                    "quantity": "1.0",
+                    "status": "M",
+                    "type": "standAloneItem",
+                    "skipPlanCatentryId": "",
+                    "inventoryStatus": "Allocated",
+                    "productOffering": {
+                        "id": "707012",
+                        "productSpecification": {
+                            "partNumber": "AUSDX128GUICL10A1",
+                            "partClass": "AUSDX128GUICL10A1_P"
+                        },
+                        "attachments": [
+                            {
+                                "name": "Thumbnail Image",
+                                "url": "https://s7d1.scene7.com/is/image/tracfone/128GB Data Card"
+                            }
+                        ],
+                        "orderItemExtendAttribute": [
+                            {
+                                "attributeValue": "{taxCategory:'01',taxAmount:0.29,taxRate:0.010000,taxItemExtension:{taxType:'05',taxDescription:'Dallas Mta Tax',taxSurchargeInd:T,taxAuthorityId:9524,jurisLevel:3,taxTypeCategory:combs}},{taxCategory:'01',taxAmount:1.81,taxRate:0.062500,taxItemExtension:{taxType:'01',taxDescription:'TX State Sales Tax',taxSurchargeInd:T,taxAuthorityId:12043,jurisLevel:3,taxTypeCategory:combs}},{taxCategory:'01',taxAmount:0.29,taxRate:0.010000,taxItemExtension:{taxType:'04',taxDescription:'Irving City Sales Tax',taxSurchargeInd:T,taxAuthorityId:4421,jurisLevel:3,taxTypeCategory:combs}}",
+                                "attributeType": "",
+                                "attributeName": "taxItems"
+                            },
+                            {
+                                "attributeValue": "{\"allocationType\":\"OTHERS\",\"allocationAmount\":28.99000,\"totalTaxes\":2.39,\"totalAmount\":31.38,\"totalMandatoryTaxAmount\":2.39,\"totalOtherTaxAmount\":0.00,\"taxGroupId\":\"5017\",\"taxItemId\":\"906\"}",
+                                "attributeType": "",
+                                "attributeName": "itemAllocationPrice_844760671_C1"
+                            },
+                            {
+                                "attributeValue": "{\"allocationType\":\"OTHERS\",\"allocationAmount\":0.00,\"totalTaxes\":0.00,\"totalAmount\":0.00,\"totalMandatoryTaxAmount\":0.00,\"totalOtherTaxAmount\":0.00,\"taxGroupId\":\"5017\",\"taxItemId\":\"114\"}",
+                                "attributeType": "",
+                                "attributeName": "itemAllocationPrice_SHIPPING_844760671_C2"
+                            },
+                            {
+                                "attributeValue": "2.39",
+                                "attributeType": "",
+                                "attributeName": "totalMandatoryTaxAmount"
+                            },
+                            {
+                                "attributeValue": "0.00",
+                                "attributeType": "",
+                                "attributeName": "totalOtherTaxAmount"
+                            }
+                        ]
+                    },
+                    "customerBill": {
+                        "totalAmount": "28.99000",
+                        "amount": {
+                            "productPrice": "28.99000",
+                            "shippingCharge": "0.00000"
+                        },
+                        "taxes": {
+                            "totalSalesTax": "2.39000",
+                            "combsTax": "2.39000",
+                            "e911Tax": "0.00000",
+                            "rcrfTax": "0.00000",
+                            "usfTax": "0.00000",
+                            "e911RateAmount": "0.00000",
+                            "e911FlatAmount": "0.00000",
+                            "ostRateAmount": "0.00000",
+                            "ostFlatAmount": "0.00000",
+                            "totalShippingTax": "0.00000"
+                        },
+                        "totalDiscount": "0.00000",
+                        "adjustments": [
+                        ]
+                    },
+                    "orderItemExtension": [
+                        {
+                            "name": "allowedQuantity",
+                            "value": "4"
+                        },
+                        {
+                            "name": "totalMandatoryTaxAmount",
+                            "value": "2.39"
+                        },
+                        {
+                            "name": "thumbnailURL",
+                            "value": "https://s7d1.scene7.com/is/image/tracfone/128GB Data Card"
+                        },
+                        {
+                            "name": "orderItemType",
+                            "value": "standAloneItem"
+                        },
+                        {
+                            "name": "productAssetId",
+                            "value": "cc9729e4-05a9-4c6f-a4e6-32a6de5b74b8"
+                        },
+                        {
+                            "name": "parentPartNumber",
+                            "value": "AUSDX128GUICL10A1_P"
+                        },
+                        {
+                            "name": "lineItemType",
+                            "value": "ACC"
+                        },
+                        {
+                            "name": "itemAllocationPrice",
+                            "value": "[{\"id\":\"844760671_C1\",\"allocationType\":\"OTHERS\",\"allocationAmount\":28.99000,\"totalTaxes\":2.39,\"totalAmount\":31.38,\"totalMandatoryTaxAmount\":2.39,\"totalOtherTaxAmount\":0.00,\"taxGroupId\":\"5017\",\"taxItemId\":\"906\"},{\"id\":\"SHIPPING_844760671_C2\",\"allocationType\":\"OTHERS\",\"allocationAmount\":0.00,\"totalTaxes\":0.00,\"totalAmount\":0.00,\"totalMandatoryTaxAmount\":0.00,\"totalOtherTaxAmount\":0.00,\"taxGroupId\":\"5017\",\"taxItemId\":\"114\"}]"
+                        },
+                        {
+                            "name": "isPersonalAddressesAllowedForShipping",
+                            "value": "true"
+                        },
+                        {
+                            "name": "productName",
+                            "value": "128 GB Memory Card"
+                        },
+                        {
+                            "name": "editCartURL",
+                            "value": "/content/tracfone1/us/en/products/accessories/all-accessories"
+                        },
+                        {
+                            "name": "totalOtherTaxAmount",
+                            "value": "0.00"
+                        },
+                        {
+                            "name": "taxItems",
+                            "value": "[{\"taxRate\":0.010000,\"taxAmount\":0.29,\"taxItemExtension\":[{\"name\":\"taxAuthorityId\",\"value\":\"9524\"},{\"name\":\"taxTypeCategory\",\"value\":\"combs\"},{\"name\":\"taxSurchargeInd\",\"value\":\"T\"},{\"name\":\"taxDescription\",\"value\":\"Dallas Mta Tax\"},{\"name\":\"jurisLevel\",\"value\":\"3\"},{\"name\":\"taxType\",\"value\":\"05\"}],\"taxCategory\":\"01\"},{\"taxRate\":0.062500,\"taxAmount\":1.81,\"taxItemExtension\":[{\"name\":\"taxAuthorityId\",\"value\":\"12043\"},{\"name\":\"taxTypeCategory\",\"value\":\"combs\"},{\"name\":\"taxSurchargeInd\",\"value\":\"T\"},{\"name\":\"taxDescription\",\"value\":\"TX State Sales Tax\"},{\"name\":\"jurisLevel\",\"value\":\"3\"},{\"name\":\"taxType\",\"value\":\"01\"}],\"taxCategory\":\"01\"},{\"taxRate\":0.010000,\"taxAmount\":0.29,\"taxItemExtension\":[{\"name\":\"taxAuthorityId\",\"value\":\"4421\"},{\"name\":\"taxTypeCategory\",\"value\":\"combs\"},{\"name\":\"taxSurchargeInd\",\"value\":\"T\"},{\"name\":\"taxDescription\",\"value\":\"Irving City Sales Tax\"},{\"name\":\"jurisLevel\",\"value\":\"3\"},{\"name\":\"taxType\",\"value\":\"04\"}],\"taxCategory\":\"01\"}]"
+                        },
+                        {
+                            "name": "groupId",
+                            "value": "844760671"
+                        },
+                        {
+                            "name": "manufacturer",
+                            "value": "Total By Verizon"
+                        },
+                        {
+                            "name": "groupName",
+                            "value": "_LBL_ACCESSORY"
+                        }
+                    ],
+                    "itemAllocationPrice": [
+                        {
+                            "id": "844760671_C1",
+                            "allocationType": "OTHERS",
+                            "allocationAmount": 28.99000,
+                            "totalTaxes": 2.39,
+                            "totalAmount": 31.38,
+                            "totalMandatoryTaxAmount": 2.39,
+                            "totalOtherTaxAmount": 0.00,
+                            "taxGroupId": "5017",
+                            "taxItemId": "906"
+                        },
+                        {
+                            "id": "SHIPPING_844760671_C2",
+                            "allocationType": "OTHERS",
+                            "allocationAmount": 0.00,
+                            "totalTaxes": 0.00,
+                            "totalAmount": 0.00,
+                            "totalMandatoryTaxAmount": 0.00,
+                            "totalOtherTaxAmount": 0.00,
+                            "taxGroupId": "5017",
+                            "taxItemId": "114"
+                        }
+                    ],
+                    "taxItems": [
+                        {
+                            "taxRate": 0.010000,
+                            "taxAmount": 0.29,
+                            "taxItemExtension": [
+                                {
+                                    "name": "taxAuthorityId",
+                                    "value": "9524"
+                                },
+                                {
+                                    "name": "taxTypeCategory",
+                                    "value": "combs"
+                                },
+                                {
+                                    "name": "taxSurchargeInd",
+                                    "value": "T"
+                                },
+                                {
+                                    "name": "taxDescription",
+                                    "value": "Dallas Mta Tax"
+                                },
+                                {
+                                    "name": "jurisLevel",
+                                    "value": "3"
+                                },
+                                {
+                                    "name": "taxType",
+                                    "value": "05"
+                                }
+                            ],
+                            "taxCategory": "01"
+                        },
+                        {
+                            "taxRate": 0.062500,
+                            "taxAmount": 1.81,
+                            "taxItemExtension": [
+                                {
+                                    "name": "taxAuthorityId",
+                                    "value": "12043"
+                                },
+                                {
+                                    "name": "taxTypeCategory",
+                                    "value": "combs"
+                                },
+                                {
+                                    "name": "taxSurchargeInd",
+                                    "value": "T"
+                                },
+                                {
+                                    "name": "taxDescription",
+                                    "value": "TX State Sales Tax"
+                                },
+                                {
+                                    "name": "jurisLevel",
+                                    "value": "3"
+                                },
+                                {
+                                    "name": "taxType",
+                                    "value": "01"
+                                }
+                            ],
+                            "taxCategory": "01"
+                        },
+                        {
+                            "taxRate": 0.010000,
+                            "taxAmount": 0.29,
+                            "taxItemExtension": [
+                                {
+                                    "name": "taxAuthorityId",
+                                    "value": "4421"
+                                },
+                                {
+                                    "name": "taxTypeCategory",
+                                    "value": "combs"
+                                },
+                                {
+                                    "name": "taxSurchargeInd",
+                                    "value": "T"
+                                },
+                                {
+                                    "name": "taxDescription",
+                                    "value": "Irving City Sales Tax"
+                                },
+                                {
+                                    "name": "jurisLevel",
+                                    "value": "3"
+                                },
+                                {
+                                    "name": "taxType",
+                                    "value": "04"
+                                }
+                            ],
+                            "taxCategory": "01"
+                        }
+                    ],
+                    "totalMandatoryTaxAmount": "2.39",
+                    "totalOtherTaxAmount": "0.00"
+                }
+            ],
+            "billingAccount": {
+                "paymentPlan": {
+                    "paymentMethod": {
+                        "externalId": "101393518",
+                        "billingAddress": {
+                            "id": "4611686018527815670",
+                            "addressLine1": "hidden ridge",
+                            "addressLine2": "",
+                            "addressLine3": "",
+                            "city": "Irving",
+                            "stateOrProvince": "TX",
+                            "zipcode": "75063",
+                            "country": "US",
+                            "phoneNumber": "(305) 372 9167",
+                            "emailAddress": "100000142729903test@yopmail.com",
+                            "isDigitalWalletPayment": "false"
+                        }
+                    }
+                },
+                "paymentPlanExtension": [
+                    {
+                        "name": "last4digit",
+                        "value": ""
+                    },
+                    {
+                        "name": "cardType",
+                        "value": "SmartPay lease payment option"
+                    }
+                ],
+                "customerBill": {
+                    "totalAmount": "31.38000",
+                    "amount": {
+                        "productPrice": "28.99000",
+                        "shippingCharge": "0.00000"
+                    },
+                    "taxes": {
+                        "totalSalesTax": "2.39000",
+                        "combsTax": "2.39000",
+                        "e911Tax": "0.00000",
+                        "rcrfTax": "0.00000",
+                        "usfTax": "0.00000",
+                        "e911RateAmount": "0.00000",
+                        "e911FlatAmount": "0.00000",
+                        "ostRateAmount": "0.00000",
+                        "ostFlatAmount": "0.00000",
+                        "shipRetailFee": "0.00000",
+                        "totalShippingTax": "0.00000",
+                        "e911Label": "9-1-1 Emergency Service Fee<sup>2</sup>",
+                        "e911RateLabel": "9-1-1 Emergency Service Fee<sup>2</sup>",
+                        "e911FlatLabel": "9-1-1 Emergency Service Fee<sup>2</sup>",
+                        "ostRateLabel": "TX Universal Service Fund Assessment<sup>4</sup>",
+                        "ostFlatLabel": "",
+                        "shipFeeLabel": ""
+                    },
+                    "deviceTaxes": {
+                        "e911FlatAmount": "0",
+                        "shipRetailFee": "0",
+                        "e911RateAmount": "0",
+                        "rcrfTax": "0",
+                        "e911Tax": "0",
+                        "combsTax": "2.39",
+                        "usfTax": "0",
+                        "ship": "0",
+                        "ostFlatAmount": "0",
+                        "ostRateAmount": "0",
+                        "totalTaxAmount": "2.39"
+                    },
+                    "planTaxes": {
+                        "e911FlatAmount": "0",
+                        "shipRetailFee": "0",
+                        "e911RateAmount": "0",
+                        "rcrfTax": "0",
+                        "e911Tax": "0",
+                        "combsTax": "0",
+                        "usfTax": "0",
+                        "ship": "0",
+                        "ostFlatAmount": "0",
+                        "ostRateAmount": "0",
+                        "totalTaxAmount": "0"
+                    },
+                    "totalDiscount": "0.00000",
+                    "adjustments": [
+                    ],
+                    "taxItems": {
+                        "deviceTaxItems": [
+                            {
+                                "taxRate": 0.062500,
+                                "taxAmount": 1.81,
+                                "taxItemExtension": [
+                                    {
+                                        "name": "taxAuthorityId",
+                                        "value": "12043"
+                                    },
+                                    {
+                                        "name": "taxTypeCategory",
+                                        "value": "combs"
+                                    },
+                                    {
+                                        "name": "taxSurchargeInd",
+                                        "value": "T"
+                                    },
+                                    {
+                                        "name": "taxDescription",
+                                        "value": "TX State Sales Tax"
+                                    },
+                                    {
+                                        "name": "jurisLevel",
+                                        "value": "3"
+                                    },
+                                    {
+                                        "name": "taxType",
+                                        "value": "01"
+                                    }
+                                ],
+                                "taxCategory": "01"
+                            },
+                            {
+                                "taxRate": 0.010000,
+                                "taxAmount": 0.29,
+                                "taxItemExtension": [
+                                    {
+                                        "name": "taxAuthorityId",
+                                        "value": "4421"
+                                    },
+                                    {
+                                        "name": "taxTypeCategory",
+                                        "value": "combs"
+                                    },
+                                    {
+                                        "name": "taxSurchargeInd",
+                                        "value": "T"
+                                    },
+                                    {
+                                        "name": "taxDescription",
+                                        "value": "Irving City Sales Tax"
+                                    },
+                                    {
+                                        "name": "jurisLevel",
+                                        "value": "3"
+                                    },
+                                    {
+                                        "name": "taxType",
+                                        "value": "04"
+                                    }
+                                ],
+                                "taxCategory": "01"
+                            },
+                            {
+                                "taxRate": 0.010000,
+                                "taxAmount": 0.29,
+                                "taxItemExtension": [
+                                    {
+                                        "name": "taxAuthorityId",
+                                        "value": "9524"
+                                    },
+                                    {
+                                        "name": "taxTypeCategory",
+                                        "value": "combs"
+                                    },
+                                    {
+                                        "name": "taxSurchargeInd",
+                                        "value": "T"
+                                    },
+                                    {
+                                        "name": "taxDescription",
+                                        "value": "Dallas Mta Tax"
+                                    },
+                                    {
+                                        "name": "jurisLevel",
+                                        "value": "3"
+                                    },
+                                    {
+                                        "name": "taxType",
+                                        "value": "05"
+                                    }
+                                ],
+                                "taxCategory": "01"
+                            }
+                        ],
+                        "planTaxItems": [
+                        ],
+                        "deviceTotalMandatoryTaxAmount": "2.39",
+                        "deviceTotalOtherTaxAmount": "0.0",
+                        "planTotalMandatoryTaxAmount": "0.0",
+                        "planTotalOtherTaxAmount": "0.0"
+                    }
+                }
+            },
+            "shipping": [
+                {
+                    "shipmentMode": {
+                        "id": "110508",
+                        "serviceCode": "FedEx 2-Day",
+                        "description": "2-Day - FREE"
+                    },
+                    "shipTo": {
+                        "party": {
+                            "individual": {
+                                "contactDetails": {
+                                    "firstName": "test",
+                                    "lastName": "data"
+                                }
+                            }
+                        },
+                        "contactMedium": {
+                            "contactDetails": {
+                                "id": "4611686018527815670",
+                                "nickName": "shippingAddress1635-4O6I655TE61748882369085",
+                                "addressType": "",
+                                "addressLine1": "hidden ridge",
+                                "addressLine2": "",
+                                "addressLine3": "",
+                                "city": "Irving",
+                                "stateOrProvince": "TX",
+                                "zipCode": "75063",
+                                "country": "US",
+                                "phoneNumber": "(305) 372 9167",
+                                "emailAddress": "100000142729903test@yopmail.com",
+                                "primary": ""
+                            }
+                        }
+                    }
+                }
+            ],
+            "orderExtension": [
+                {
+                    "name": "deviceSubTotal",
+                    "value": "28.99000"
+                },
+                {
+                    "name": "deviceTotal",
+                    "value": "28.99000"
+                },
+                {
+                    "name": "AccountBalanceUsed",
+                    "value": "28.99"
+                },
+                {
+                    "name": "hppTotalWithTax",
+                    "value": ".00"
+                },
+                {
+                    "name": "devicesTaxItems",
+                    "value": "[{\"taxRate\":0.062500,\"taxAmount\":1.81,\"taxItemExtension\":[{\"name\":\"taxAuthorityId\",\"value\":\"12043\"},{\"name\":\"taxTypeCategory\",\"value\":\"combs\"},{\"name\":\"taxSurchargeInd\",\"value\":\"T\"},{\"name\":\"taxDescription\",\"value\":\"TX State Sales Tax\"},{\"name\":\"jurisLevel\",\"value\":\"3\"},{\"name\":\"taxType\",\"value\":\"01\"}],\"taxCategory\":\"01\"},{\"taxRate\":0.010000,\"taxAmount\":0.29,\"taxItemExtension\":[{\"name\":\"taxAuthorityId\",\"value\":\"4421\"},{\"name\":\"taxTypeCategory\",\"value\":\"combs\"},{\"name\":\"taxSurchargeInd\",\"value\":\"T\"},{\"name\":\"taxDescription\",\"value\":\"Irving City Sales Tax\"},{\"name\":\"jurisLevel\",\"value\":\"3\"},{\"name\":\"taxType\",\"value\":\"04\"}],\"taxCategory\":\"01\"},{\"taxRate\":0.010000,\"taxAmount\":0.29,\"taxItemExtension\":[{\"name\":\"taxAuthorityId\",\"value\":\"9524\"},{\"name\":\"taxTypeCategory\",\"value\":\"combs\"},{\"name\":\"taxSurchargeInd\",\"value\":\"T\"},{\"name\":\"taxDescription\",\"value\":\"Dallas Mta Tax\"},{\"name\":\"jurisLevel\",\"value\":\"3\"},{\"name\":\"taxType\",\"value\":\"05\"}],\"taxCategory\":\"01\"}]"
+                },
+                {
+                    "name": "isPurchaseOrderNumberRequired",
+                    "value": "false"
+                },
+                {
+                    "name": "e911RateText",
+                    "value": "9-1-1 Emergency Service Fee<sup>2</sup>"
+                },
+                {
+                    "name": "ostRateText",
+                    "value": "TX Universal Service Fund Assessment<sup>4</sup>"
+                },
+                {
+                    "name": "ONETIME_ADJUSTMENT",
+                    "value": "0.00000"
+                },
+                {
+                    "name": "isPersonalAddressesAllowedForShipping",
+                    "value": "true"
+                },
+                {
+                    "name": "orderTangibility",
+                    "value": "tangible"
+                },
+                {
+                    "name": "planTotalWithTax",
+                    "value": ".00"
+                },
+                {
+                    "name": "plansTaxes",
+                    "value": "{E911FLATAMOUNT=0, SHIP_RETAIL_FEE=0, E911RATEAMOUNT=0, RCRF=0, E911=0, COMBS=0, USF=0, SHIP=0, OSTFLATAMOUNT=0, OSTRATEAMOUNT=0, TOTALTAXAMOUNT=0}"
+                },
+                {
+                    "name": "language",
+                    "value": "-1"
+                },
+                {
+                    "name": "orderStatusDescription",
+                    "value": "Pending payment approval"
+                },
+                {
+                    "name": "field1",
+                    "value": "2"
+                },
+                {
+                    "name": "field2",
+                    "value": "3"
+                },
+                {
+                    "name": "ONETIME_SUBTOTAL",
+                    "value": "0.00"
+                },
+                {
+                    "name": "trackingURL",
+                    "value": "https://www.ups.com/track?loc=en_US&requester=tracfone&tracknum=Tracking number not available"
+                },
+                {
+                    "name": "e911Text",
+                    "value": "9-1-1 Emergency Service Fee<sup>2</sup>"
+                },
+                {
+                    "name": "taxItems",
+                    "value": "[{\"taxRate\":0.062500,\"taxAmount\":1.81,\"taxItemExtension\":[{\"name\":\"taxAuthorityId\",\"value\":\"12043\"},{\"name\":\"taxTypeCategory\",\"value\":\"combs\"},{\"name\":\"taxSurchargeInd\",\"value\":\"T\"},{\"name\":\"taxDescription\",\"value\":\"TX State Sales Tax\"},{\"name\":\"jurisLevel\",\"value\":\"3\"},{\"name\":\"taxType\",\"value\":\"01\"}],\"taxCategory\":\"01\"},{\"taxRate\":0.010000,\"taxAmount\":0.29,\"taxItemExtension\":[{\"name\":\"taxAuthorityId\",\"value\":\"4421\"},{\"name\":\"taxTypeCategory\",\"value\":\"combs\"},{\"name\":\"taxSurchargeInd\",\"value\":\"T\"},{\"name\":\"taxDescription\",\"value\":\"Irving City Sales Tax\"},{\"name\":\"jurisLevel\",\"value\":\"3\"},{\"name\":\"taxType\",\"value\":\"04\"}],\"taxCategory\":\"01\"},{\"taxRate\":0.010000,\"taxAmount\":0.29,\"taxItemExtension\":[{\"name\":\"taxAuthorityId\",\"value\":\"9524\"},{\"name\":\"taxTypeCategory\",\"value\":\"combs\"},{\"name\":\"taxSurchargeInd\",\"value\":\"T\"},{\"name\":\"taxDescription\",\"value\":\"Dallas Mta Tax\"},{\"name\":\"jurisLevel\",\"value\":\"3\"},{\"name\":\"taxType\",\"value\":\"05\"}],\"taxCategory\":\"01\"}]"
+                },
+                {
+                    "name": "accountId",
+                    "value": "719458571"
+                },
+                {
+                    "name": "devicesTaxes",
+                    "value": "{E911FLATAMOUNT=0, SHIP_RETAIL_FEE=0, E911RATEAMOUNT=0, RCRF=0, E911=0, COMBS=2.39, USF=0, SHIP=0, OSTFLATAMOUNT=0, OSTRATEAMOUNT=0, TOTALTAXAMOUNT=2.39}"
+                },
+                {
+                    "name": "isRestServiceFlow",
+                    "value": "true"
+                },
+                {
+                    "name": "orderType",
+                    "value": "FRP"
+                },
+                {
+                    "name": "planTotal",
+                    "value": "0"
+                },
+                {
+                    "name": "hppSubTotal",
+                    "value": "0"
+                },
+                {
+                    "name": "trackingProvider",
+                    "value": "UPS 2-Day"
+                },
+                {
+                    "name": "quantity",
+                    "value": "1.0"
+                },
+                {
+                    "name": "customerOrderId",
+                    "value": "1635-4O6I655TE6"
+                },
+                {
+                    "name": "account_balance",
+                    "value": "55.00"
+                },
+                {
+                    "name": "RECURRING_ADJUSTMENT",
+                    "value": "0.00"
+                },
+                {
+                    "name": "trackingNumber",
+                    "value": "Tracking number not available"
+                },
+                {
+                    "name": "ONETIME_TOTAL",
+                    "value": "0.00000"
+                },
+                {
+                    "name": "deviceTotalOtherTaxAmount",
+                    "value": "0.0"
+                },
+                {
+                    "name": "deviceTotalWithTax",
+                    "value": "31.38"
+                },
+                {
+                    "name": "plansTaxItems",
+                    "value": "[]"
+                },
+                {
+                    "name": "planSubTotal",
+                    "value": "0"
+                },
+                {
+                    "name": "hppTotal",
+                    "value": "0"
+                },
+                {
+                    "name": "recurringChargeTotal",
+                    "value": "0.00"
+                },
+                {
+                    "name": "eligibleAccountBalance",
+                    "value": "55.00"
+                },
+                {
+                    "name": "e911FlatText",
+                    "value": "9-1-1 Emergency Service Fee<sup>2</sup>"
+                },
+                {
+                    "name": "grandTotalExcludingAccountBalance",
+                    "value": "0.0"
+                },
+                {
+                    "name": "planTotalMandatoryTaxAmount",
+                    "value": "0.0"
+                },
+                {
+                    "name": "displayPromoError",
+                    "value": "N"
+                },
+                {
+                    "name": "deviceTotalMandatoryTaxAmount",
+                    "value": "2.39"
+                },
+                {
+                    "name": "trackingIds",
+                    "value": ""
+                },
+                {
+                    "name": "planTotalOtherTaxAmount",
+                    "value": "0.0"
+                },
+                {
+                    "name": "containsMobilePhone",
+                    "value": "false"
+                },
+                {
+                    "name": "RECURRING_SUBTOTAL",
+                    "value": "0.00"
+                }
+            ]
+        }
+    ]
+}
+
+
+If Response is No data found then reply back to the JBPM with No Data Found Error Message.
+If in Response orderId is coming back store that in the hashmap by calling TransactionalDataUtils.addTransactionData(refnumber, Field Name, Field Value) and reply back to JBPM as Success
+
+—------------------------------------------------------------------------------------------------------------------
+—------------------------------------------------------------------------------------------------------------------
+
+
