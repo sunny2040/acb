@@ -1,0 +1,430 @@
+package com.vzw.vxp.bpm.accountbalance.util;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.kie.api.runtime.process.ProcessContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.Serializable;
+
+public class GenericRestUtil implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = LoggerFactory.getLogger(GenericRestUtil.class);
+
+    /**
+     * Generic onEntry method to prepare a REST call using values from property file and context.
+     * 
+     * Expects:
+     * - URL key and METHOD key set as process variables before this is called.
+     * - Payload as a process variable named BPMConstants.REQUEST_PAYLOAD
+     */
+    public void initiateGenericRestCallRequest(ProcessContext kcontext) {
+        LOGGER.info("Entering into: initiateGenericRestCallRequest()");
+
+        try {
+            String urlKey = (String) kcontext.getVariable("urlKey");
+            String methodKey = (String) kcontext.getVariable("methodKey");
+
+            String url = PropertyFile.getProperty(urlKey);
+            String method = PropertyFile.getProperty(methodKey);
+            String contentType = PropertyFile.getProperty(BPMConstants.CONTENT_TYPE_KEY);
+            String authType = PropertyFile.getProperty(BPMConstants.AUTH_TYPE_KEY);
+            String payload = (String) kcontext.getVariable(BPMConstants.REQUEST_PAYLOAD);
+
+            if (url == null || method == null || contentType == null || authType == null || payload == null) {
+                throw new IllegalArgumentException("Required configuration or payload is missing.");
+            }
+
+            kcontext.setVariable(BPMConstants.URL_KEY, url);
+            kcontext.setVariable(BPMConstants.METHOD_KEY, method);
+            kcontext.setVariable(BPMConstants.CONTENT_TYPE_KEY, contentType);
+            kcontext.setVariable(BPMConstants.AUTH_TYPE_KEY, authType);
+
+            LOGGER.info("Prepared REST call - URL: {}, Method: {}, Payload: {}", url, method, payload);
+
+        } catch (Exception e) {
+            LOGGER.error("Failed to prepare REST call", e);
+            throw new RuntimeException("Failed to initiate REST call", e);
+        }
+    }
+
+    /**
+     * Generic onExit method to validate REST response.
+     * 
+     * Stores boolean isSuccess=true if response JSON is not null and valid.
+     */
+    public void validateGenericRestCallResponse(ProcessContext kcontext) {
+        LOGGER.info("Entering into: validateGenericRestCallResponse()");
+
+        boolean isSuccess = true;
+
+        try {
+            String responseJson = (String) kcontext.getVariable(BPMConstants.RESULT_VARIABLE);
+
+            if (responseJson == null || responseJson.trim().isEmpty()) {
+                throw new RuntimeException("Empty or null REST response");
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(responseJson);
+
+            LOGGER.info("REST Response: {}", root.toPrettyString());
+
+        } catch (Exception e) {
+            LOGGER.error("Error validating REST response", e);
+            isSuccess = false;
+        }
+
+        kcontext.setVariable("isSuccess", isSuccess);
+    }
+}
+
+
+
+
+
+
+
+
+
+package com.vzw.vxp.bpm.accountbalance.util;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.kie.api.runtime.process.ProcessContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.Serializable;
+
+public class EstimateOrderControllerUtil implements Serializable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EstimateOrderControllerUtil.class);
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * Sets up URL, method, auth, contentType, and payload in process context for Estimate Order.
+     * Used in onEntry of service task.
+     */
+    public void initiateEstimateOrderRequest(ProcessContext kcontext) {
+        LOGGER.info("Initiating Estimate Order request");
+
+        try {
+            String url = PropertyFile.getProperty(BPMConstants.ESTIMATE_ORDER_URL);
+            String method = PropertyFile.getProperty(BPMConstants.ESTIMATE_ORDER_METHOD);
+            String contentType = PropertyFile.getProperty(BPMConstants.CONTENT_TYPE_KEY);
+            String authType = PropertyFile.getProperty(BPMConstants.AUTH_TYPE_KEY);
+            String payload = (String) kcontext.getVariable(BPMConstants.REQUEST_PAYLOAD);
+
+            if (url == null || method == null || contentType == null || authType == null || payload == null) {
+                throw new IllegalArgumentException("Missing config or payload for Estimate Order");
+            }
+
+            kcontext.setVariable(BPMConstants.URL_KEY, url);
+            kcontext.setVariable(BPMConstants.METHOD_KEY, method);
+            kcontext.setVariable(BPMConstants.CONTENT_TYPE_KEY, contentType);
+            kcontext.setVariable(BPMConstants.AUTH_TYPE_KEY, authType);
+
+            LOGGER.info("Estimate Order - URL: {}, Method: {}, Payload: {}", url, method, payload);
+
+        } catch (Exception e) {
+            LOGGER.error("Error in initiateEstimateOrderRequest()", e);
+            throw new RuntimeException("Failed to prepare Estimate Order REST call", e);
+        }
+    }
+
+    /**
+     * Validates the Estimate Order response.
+     * Stores result in 'isSuccess' variable.
+     */
+    public void validateEstimateOrderResponse(ProcessContext kcontext) {
+        LOGGER.info("Validating Estimate Order response");
+
+        boolean isSuccess = true;
+
+        try {
+            String response = (String) kcontext.getVariable(BPMConstants.RESULT_VARIABLE);
+            if (response == null || response.isBlank()) {
+                throw new RuntimeException("Estimate Order response is empty or null");
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode json = mapper.readTree(response);
+
+            LOGGER.info("Estimate Order Response:\n{}", json.toPrettyString());
+
+            // Additional validation logic can be added here if needed
+
+        } catch (Exception e) {
+            LOGGER.error("Error in validateEstimateOrderResponse()", e);
+            isSuccess = false;
+        }
+
+        kcontext.setVariable("isSuccess", isSuccess);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+package com.verizon.mockservice.controller;
+
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.verizon.mockservice.dto.StandardResponse;
+import com.verizon.mockservice.utility.ResponseUtil;
+import com.verizon.mockservice.utility.TransactionalDataUtils;
+
+@RestController
+@RequestMapping("/v1/api/custmgmt")
+public class EstimateOrderController {
+
+ @PostMapping("/estimate-order")
+ public ResponseEntity<StandardResponse> estimateOrder(@RequestBody Map<String, Object> request) {
+     String refNumber = (String) request.get("refNumber");
+
+     Map<String, Object> transactionData = TransactionalDataUtils.getTransactionData(refNumber);
+     if (transactionData == null || transactionData.isEmpty()) {
+         return ResponseEntity.ok(ResponseUtil.noDataResponse());
+     }
+
+     // Simulate BRM Adapter Call with the transactionData
+     Map<String, Object> response = simulateEstimateCall(transactionData);
+
+     if (response == null) {
+         return ResponseEntity.ok(ResponseUtil.noDataResponse());
+     }
+
+     if (response.containsKey("TotalAmount")) {
+         TransactionalDataUtils.addTransactionData(refNumber, "TotalAmount", response.get("TotalAmount"));
+     }
+
+     return ResponseEntity.ok(ResponseUtil.successResponse());
+ }
+
+ private Map<String, Object> simulateEstimateCall(Map<String, Object> transactionData) {
+     return Map.of("TotalAmount", 120.00);
+ }
+}
+
+
+
+
+
+
+package com.verizon.mockservice.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.verizon.mockservice.dto.StandardResponse;
+import com.verizon.mockservice.dto.ResponseStatus;
+import com.verizon.mockservice.utility.ResponseUtil;
+import com.verizon.mockservice.utility.TransactionalDataUtils;
+
+@RestController
+@RequestMapping("/v1/api/custmgmt")
+public class ProductOfferingController {
+
+    @PostMapping("/product-offerings")
+    public ResponseEntity<StandardResponse> getProductOffering(@RequestBody Map<String, Object> request) {
+        try {
+            String refNumber = (String) request.get("refNumber");
+            String offeringId = (String) request.get("offeringId");
+
+            // Simulate backend response
+            Map<String, Object> offeringResponse = simulateOfferingCall(offeringId);
+
+            if (offeringResponse == null) {
+                return ResponseEntity.ok(ResponseUtil.noDataResponse());
+            }
+
+            // Navigate JSON: offeringTerms[0].offeringPrice[0].price.amount
+            List<Map<String, Object>> offeringTerms = (List<Map<String, Object>>) offeringResponse.get("offeringTerms");
+            if (offeringTerms == null || offeringTerms.isEmpty()) {
+                return ResponseEntity.ok(ResponseUtil.noDataResponse());
+            }
+
+            Map<String, Object> firstTerm = offeringTerms.get(0);
+            List<Map<String, Object>> offeringPrice = (List<Map<String, Object>>) firstTerm.get("offeringPrice");
+            if (offeringPrice == null || offeringPrice.isEmpty()) {
+                return ResponseEntity.ok(ResponseUtil.noDataResponse());
+            }
+
+            Map<String, Object> priceWrapper = offeringPrice.get(0);
+            Map<String, Object> price = (Map<String, Object>) priceWrapper.get("price");
+            if (price == null || !price.containsKey("amount")) {
+                return ResponseEntity.ok(ResponseUtil.noDataResponse());
+            }
+
+            Double amount = ((Number) price.get("amount")).doubleValue();
+
+            // Store in transactional memory
+            TransactionalDataUtils.addTransactionData(refNumber, "amount", amount);
+
+            return ResponseEntity.ok(ResponseUtil.successResponse());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(new StandardResponse(
+                new ResponseStatus("500", "Internal Server Error", "ERROR")
+            ));
+        }
+    }
+
+    // Simulated external offering API
+    private Map<String, Object> simulateOfferingCall(String offeringId) {
+        if ("TORTR0065PCARD".equals(offeringId)) {
+            return Map.of(
+                "category", "PAYMENT_CARD",
+                "offeringTerms", List.of(
+                    Map.of(
+                        "offeringPrice", List.of(
+                            Map.of(
+                                "priceType", "cashValue",
+                                "price", Map.of("amount", 65.00)
+                            )
+                        )
+                    )
+                )
+            );
+        }
+        return null;
+    }
+}
+
+
+
+
+
+
+package com.verizon.mockservice.dto;
+
+public class ResponseStatus {
+ private String code;
+ private String message;
+ private String type;
+
+ public ResponseStatus(String code, String message, String type) {
+     this.code = code;
+     this.message = message;
+     this.type = type;
+ }
+
+public String getCode() {
+	return code;
+}
+
+public void setCode(String code) {
+	this.code = code;
+}
+
+public String getMessage() {
+	return message;
+}
+
+public void setMessage(String message) {
+	this.message = message;
+}
+
+public String getType() {
+	return type;
+}
+
+public void setType(String type) {
+	this.type = type;
+}
+
+
+}
+
+
+
+
+package com.verizon.mockservice.dto;
+
+public class StandardResponse {
+	private ResponseStatus status;
+
+	public StandardResponse(ResponseStatus status) {
+		this.status = status;
+	}
+
+	public ResponseStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(ResponseStatus status) {
+		this.status = status;
+	}
+
+}
+
+
+
+
+package com.verizon.mockservice.utility;
+
+import com.verizon.mockservice.dto.ResponseStatus;
+import com.verizon.mockservice.dto.StandardResponse;
+
+public class ResponseUtil {
+ public static final ResponseStatus SUCCESS = new ResponseStatus("0", "Success", "SUCCESS");
+ public static final ResponseStatus NO_DATA = new ResponseStatus("1", "No Data Found", "ERROR");
+
+ public static StandardResponse successResponse() {
+     return new StandardResponse(SUCCESS);
+ }
+
+ public static StandardResponse noDataResponse() {
+     return new StandardResponse(NO_DATA);
+ }
+}
+
+
+
+
+
+package com.verizon.mockservice.utility;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class TransactionalDataUtils {
+	 private static final Map<String, Map<String, Object>> transactionData = new ConcurrentHashMap<>();
+
+ public static void addTransactionData(String refNumber, String field, Object value) {
+     transactionData.computeIfAbsent(refNumber, k -> new ConcurrentHashMap<>()).put(field, value);
+ }
+
+ public static Map<String, Object> getTransactionData(String refNumber) {
+     return transactionData.get(refNumber);
+ }
+}
